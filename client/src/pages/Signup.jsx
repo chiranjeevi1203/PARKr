@@ -1,11 +1,34 @@
+import { useState } from "react";
+import axios from "axios"
 import styles from "../public/Signup.module.css";
 
 function Signup() {
+  const [username,setUserName] = useState("")
+  const [email,setEmail] = useState("")
+  const [password,setPassword] = useState("")
+
+  async function handleSubmit(e){
+    e.preventDefault()
+    try{
+      await axios.post("http://localhost:8000/user/signup",{username,email,password}).then(res=>{
+        if(res.status === 201){
+          console.log("Signup Successful")
+        }
+        else{
+          console.log("Signup failed")
+        }
+      })
+    }
+    catch(err){
+      console.log("Error in sending signup data",err)
+    }
+  }
+
   return (
     <div className={styles.signupBox}>
       <p className="h1">Signup</p>
 
-      <form className={styles.form}>
+      <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles["flex-column"]}>
           <label>Username</label>
         </div>
@@ -22,6 +45,9 @@ function Signup() {
             type="text"
             className={styles.input}
             placeholder="Enter your Username"
+            onChange={setUserName(e=>{
+              e.target.value
+            })}
           />
         </div>
 
@@ -41,6 +67,9 @@ function Signup() {
             type="text"
             className={styles.input}
             placeholder="Enter your Email"
+            onChange={setEmail(e=>{
+              e.target.value
+            })}
           />
         </div>
 
@@ -61,6 +90,9 @@ function Signup() {
             type="password"
             className={styles.input}
             placeholder="Enter your Password"
+            onChange={e=>{
+              setPassword(e.target.value)
+            }}
           />
           <svg
             viewBox="0 0 576 512"
@@ -71,16 +103,13 @@ function Signup() {
           </svg>
         </div>
 
-        {/* Submit */}
         <button className={styles["button-submit"]}>Signup</button>
 
-        {/* Extra Links */}
         <p className={styles.p}>
           Already have an account? <span className={styles.span}>Login</span>
         </p>
         <p className={`${styles.p} ${styles.line}`}>Or With</p>
 
-        {/* Social Login */}
         <div className={styles["flex-row"]}>
           <button className={`${styles.btn} ${styles.google}`}>
             <svg
