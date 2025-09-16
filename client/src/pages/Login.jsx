@@ -4,7 +4,7 @@ function Login() {
   return (
     <>
     <div className={styles.loginBox}>
-      <p class="h1">Login</p>
+      <p className="h1">Login</p>
       <form className={styles.form}>
         <div className={styles["flex-column"]}>
           <label>Email</label>
