@@ -1,0 +1,32 @@
+{
+  "name": "parkr",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chiranjeevi1203/PARKr.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chiranjeevi1203/PARKr/issues"
+  },
+  "homepage": "https://github.com/chiranjeevi1203/PARKr#readme",
+  "description": "",
+  "dependencies": {
+    "@react-google-maps/api": "^2.20.7",
+    "bcrypt": "^6.0.0",
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "maplibre-gl": "^5.7.1",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0"
+  }
+}
