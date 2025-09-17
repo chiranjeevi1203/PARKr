@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import ParkrPage from "./pages/ParkrPage";
 import Profile from "./pages/Profile";
 import ParkingMap from "./pages/ParkingMap";
+import "./App.css";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));

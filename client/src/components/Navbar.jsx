@@ -4,9 +4,9 @@ function Navbar({ isLoggedIn, setIsLoggedIn }) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem("token"); // remove JWT
-    setIsLoggedIn(false);             // update state
-    navigate("/login");               // redirect to login page
+    localStorage.removeItem("token"); 
+    setIsLoggedIn(false);             
+    navigate("/");               
   };
 
   return (

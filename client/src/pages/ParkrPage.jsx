@@ -50,11 +50,21 @@ function ParkrPage() {
   const clearMarkers = () => {
     markers.current.forEach((m) => m.remove());
     markers.current = [];
-    setShowViewDetails(false);
-    setFilteredParking([]);
   };
 
-  // MapTiler autocomplete
+  // Clear everything (input + map markers)
+  const handleClear = () => {
+    setSearchInput("");
+    setSuggestions([]);
+    setFilteredParking([]);
+    setShowViewDetails(false);
+    clearMarkers();
+
+    // Reset map to default Bengaluru center
+    map.current.flyTo({ center: DEFAULT_CENTER, zoom: 12 });
+  };
+
+  // MapTiler autocomplete with relevance sorting
   useEffect(() => {
     if (searchInput.length < 2) {
       setSuggestions([]);
@@ -69,7 +79,10 @@ function ParkrPage() {
           )}.json?key=${MAPTILER_KEY}&autocomplete=true&bbox=77.460,12.834,77.772,13.139`
         );
         const data = await response.json();
-        setSuggestions(data.features || []);
+        const sorted = (data.features || []).sort(
+          (a, b) => (b.relevance || 0) - (a.relevance || 0)
+        );
+        setSuggestions(sorted);
       } catch (err) {
         console.error("Autocomplete error:", err);
       }
@@ -93,6 +106,7 @@ function ParkrPage() {
       .setPopup(new maplibregl.Popup().setText(place.place_name))
       .addTo(map.current);
     markers.current.push(marker);
+
     setShowViewDetails(true);
   };
 
@@ -104,7 +118,7 @@ function ParkrPage() {
 
     const normalizedSearch = searchInput.trim().toLowerCase();
 
-    // Filter parkingData based on area key
+    // 1️⃣ Check local parkingData first
     const results = parkingData.filter(
       (spot) => spot.area?.toLowerCase() === normalizedSearch
     );
@@ -127,7 +141,13 @@ function ParkrPage() {
       return;
     }
 
-    // Fallback if no data
+    // 2️⃣ If no local data, fallback to autocomplete API
+    if (suggestions.length > 0) {
+      handleSelect(suggestions[0]);
+      return;
+    }
+
+    // 3️⃣ If no matches at all
     setFilteredParking([]);
     setShowViewDetails(false);
   };
@@ -139,7 +159,7 @@ function ParkrPage() {
   };
 
   return (
-    <div style={{ display: "flex", height: "100vh", fontFamily: "Arial, sans-serif" }}>
+    <div style={{ display: "flex", height: "100vh" }}>
       {/* Sidebar */}
       <div
         style={{
@@ -219,6 +239,7 @@ function ParkrPage() {
           </select>
         </div>
 
+        {/* Search + Clear buttons */}
         <button
           onClick={handleSearch}
           style={{
@@ -235,9 +256,28 @@ function ParkrPage() {
           Search
         </button>
 
-        {showViewDetails && filteredParking.length > 0 && (
+        <button
+          onClick={handleClear}
+          style={{
+            width: "100%",
+            padding: "12px",
+            background: "#f5f5f5",
+            color: "#000",
+            border: "1px solid #ddd",
+            cursor: "pointer",
+            fontWeight: "bold",
+            marginBottom: "10px",
+          }}
+        >
+          Clear
+        </button>
+
+        {/* View Details button */}
+        {showViewDetails && (
           <button
-            onClick={() => navigate("/parkingmap", { state: { filteredParking, searchArea: searchInput } })}
+            onClick={() =>
+              navigate("/parkingmap", { state: { filteredParking, searchArea: searchInput } })
+            }
             style={{
               width: "100%",
               padding: "12px",
@@ -252,6 +292,7 @@ function ParkrPage() {
             View Details
           </button>
         )}
+
         <div style={{ marginTop: "auto" }}>
           <button
             onClick={() => navigate("/profile")}
@@ -274,7 +315,7 @@ function ParkrPage() {
           <button
             onClick={() => {
               localStorage.removeItem("token");
-              navigate("/login");
+              navigate("/");
             }}
             style={{
               width: "100%",
@@ -300,7 +341,6 @@ function ParkrPage() {
           style={{ width: "100%", height: "100%", borderRadius: "12px", overflow: "hidden" }}
         />
       </div>
-
     </div>
   );
 }

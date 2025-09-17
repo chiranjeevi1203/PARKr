@@ -47,7 +47,7 @@ function ParkingMap() {
       const bounds = new maplibregl.LngLatBounds();
 
       filteredParking.forEach((spot) => {
-        const marker = new maplibregl.Marker({ color: "#ff214d" })
+        const marker = new maplibregl.Marker({ color: "#fb1717ff" })
           .setLngLat([spot.longitude, spot.latitude])
           .setPopup(new maplibregl.Popup().setText(spot.name))
           .addTo(map.current);
@@ -65,7 +65,7 @@ function ParkingMap() {
   }, [filteredParking]);
 
   return (
-    <div style={{ display: "flex", height: "100vh", fontFamily: "Arial, sans-serif" }}>
+    <div style={{ display: "flex", height: "100vh"}}>
       {/* Sidebar */}
       <div
         style={{
@@ -87,8 +87,9 @@ function ParkingMap() {
           style={{
             width: "100%",
             padding: "12px",
-            background: "#e6f2ff",
+            background: "#1a1919ff",
             border: "1px solid #ddd",
+            color: "#fff",
             cursor: "pointer",
             marginBottom: "10px",
             display: "flex",
@@ -121,7 +122,7 @@ function ParkingMap() {
           <button
             onClick={() => {
               localStorage.removeItem("token");
-              navigate("/login");
+              navigate("/");
             }}
             style={{
               width: "100%",
@@ -188,8 +189,21 @@ function ParkingMap() {
                     padding: "6px 10px",
                     borderRadius: "5px",
                     fontSize: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
                   }}
                 >
+                  {/* Google Maps SVG Icon */}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    height="14"
+                    viewBox="0 0 512 512"
+                    width="14"
+                    fill="white"
+                  >
+                    <path d="M256 0C114.836 0 0 114.836 0 256c0 141.165 114.836 256 256 256s256-114.835 256-256C512 114.836 397.164 0 256 0zM154.8 422.7c-35.1-25.2-59.7-65.6-65.9-111.7l95.6-73.8c15.7 27.6 35.6 56.7 59.6 86.2l-89.3 99.3zm166.1-5.2c-36.6-11.3-71.9-35.2-106.1-70.7l89.4-99.4c25.3 28.8 51.6 55.6 79.4 80.1-13.9 33.1-36.3 63.3-62.7 90zm42.9-136.8c-25.6-22.9-50.8-48.4-75.2-76.1l96.6-74.5c18.1 32.3 27.9 69.2 27.9 108.3 0 13.7-1.4 27.1-4 40.1-14.1 1.4-28.8 2-45.3 2.2zM256 61.1c40.2 0 77.8 11.4 109.3 31.1L268 166.9c-28.6-33.1-53.2-66.2-75.3-98.3 19.3-5.6 40-8.5 63.3-8.5zm-98.6 35.3c19.5 27.5 43.5 58.3 72.6 92.4L116.3 262c-6.5-21-10.2-43.4-10.2-66 0-36.9 9.7-71.7 27.3-101.2z" />
+                  </svg>
                   Google Maps
                 </a>
               </div>
