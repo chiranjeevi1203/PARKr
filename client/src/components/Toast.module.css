@@ -1,0 +1,46 @@
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;               /* Center horizontally */
+  transform: translateX(-50%); /* Adjust for exact center */
+  min-width: 300px;        /* Make it longer */
+  max-width: 500px;        /* Optional: limit width */
+  padding: 15px 25px;      /* More padding */
+  border-radius: 4px;     /* Rounded edges */
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  font-weight: bold;
+  z-index: 9999;
+  animation: slideIn 0.5s ease, fadeOut 0.5s ease 2.5s forwards;
+  text-align: center;
+  font-size: 16px;
+}
+
+.toast.success {
+  background: linear-gradient(90deg, #4caf50, #81c784);
+}
+
+.toast.error {
+  background: linear-gradient(90deg, #f44336, #e57373);
+}
+
+.close {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  margin-left: 15px;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(50%); }
+  to { opacity: 1; transform: translateX(-50%); }
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; transform: translateX(-50%); }
+}

@@ -1,165 +1,306 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import maplibregl from "maplibre-gl";
+import {
+  FaCar,
+  FaMotorcycle,
+  FaUser,
+  FaSignOutAlt,
+  FaQuestionCircle,
+} from "react-icons/fa";
+import parkingData from "../data/parkingData";
 
-const center = [77.5946, 12.9716]; // [lng, lat] → Bengaluru
+const DEFAULT_CENTER = [77.5946, 12.9716]; // Bengaluru
 
 function ParkrPage() {
   const navigate = useNavigate();
   const mapContainer = useRef(null);
   const map = useRef(null);
+  const markers = useRef([]);
 
-  const [location, setLocation] = useState(center);
+  const [location, setLocation] = useState(DEFAULT_CENTER);
   const [vehicleType, setVehicleType] = useState("CAR");
   const [searchInput, setSearchInput] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [showViewDetails, setShowViewDetails] = useState(false);
+  const [filteredParking, setFilteredParking] = useState([]);
 
   const MAPTILER_KEY = "PrvqpBlOxWXo2tomfOzV";
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login");
-    }
+    if (!token) navigate("/login");
   }, [navigate]);
 
+  // Initialize map
   useEffect(() => {
-    if (map.current) return; // initialize only once
+    if (map.current) return;
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
-      style: `https://api.maptiler.com/maps/jp-mierune-streets/style.json?key=${MAPTILER_KEY}`,
+      style: `https://api.maptiler.com/maps/winter-v2/style.json?key=${MAPTILER_KEY}`,
       center: location,
       zoom: 12,
     });
 
-    new maplibregl.Marker().setLngLat(location).addTo(map.current);
+    map.current.addControl(new maplibregl.NavigationControl(), "top-right");
+    map.current.addControl(new maplibregl.ScaleControl(), "bottom-left");
   }, [MAPTILER_KEY, location]);
 
-  // 🔍 Handle Search restricted to Bengaluru
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!searchInput) return;
-
-    try {
-      const response = await fetch(
-        `https://api.maptiler.com/geocoding/${encodeURIComponent(
-          searchInput
-        )}.json?key=${MAPTILER_KEY}&bbox=77.460,12.834,77.772,13.139`
-      );
-      const data = await response.json();
-
-      if (data.features && data.features.length > 0) {
-        const [lng, lat] = data.features[0].center;
-        setLocation([lng, lat]);
-
-        // Update map position
-        map.current.flyTo({ center: [lng, lat], zoom: 14 });
-
-        // Add marker
-        new maplibregl.Marker().setLngLat([lng, lat]).addTo(map.current);
-      } else {
-        alert("No results found within Bengaluru 🚫");
-      }
-    } catch (err) {
-      console.error("Geocoding error:", err);
-    }
+  const clearMarkers = () => {
+    markers.current.forEach((m) => m.remove());
+    markers.current = [];
+    setShowViewDetails(false);
+    setFilteredParking([]);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Selected Location:", location);
-    console.log("Vehicle Type:", vehicleType);
-    // → Send to backend API
+  // MapTiler autocomplete
+  useEffect(() => {
+    if (searchInput.length < 2) {
+      setSuggestions([]);
+      return;
+    }
+
+    const fetchSuggestions = async () => {
+      try {
+        const response = await fetch(
+          `https://api.maptiler.com/geocoding/${encodeURIComponent(
+            searchInput
+          )}.json?key=${MAPTILER_KEY}&autocomplete=true&bbox=77.460,12.834,77.772,13.139`
+        );
+        const data = await response.json();
+        setSuggestions(data.features || []);
+      } catch (err) {
+        console.error("Autocomplete error:", err);
+      }
+    };
+
+    const timeout = setTimeout(fetchSuggestions, 300);
+    return () => clearTimeout(timeout);
+  }, [searchInput]);
+
+  const handleSelect = (place) => {
+    const [lng, lat] = place.center;
+    setLocation([lng, lat]);
+    setSearchInput(place.place_name);
+    setSuggestions([]);
+    clearMarkers();
+
+    map.current.flyTo({ center: [lng, lat], zoom: 14 });
+
+    const marker = new maplibregl.Marker({ color: "#ff214d" })
+      .setLngLat([lng, lat])
+      .setPopup(new maplibregl.Popup().setText(place.place_name))
+      .addTo(map.current);
+    markers.current.push(marker);
+    setShowViewDetails(true);
+  };
+
+  const handleSearch = (e) => {
+    e?.preventDefault();
+    clearMarkers();
+
+    if (!searchInput) return;
+
+    const normalizedSearch = searchInput.trim().toLowerCase();
+
+    // Filter parkingData based on area key
+    const results = parkingData.filter(
+      (spot) => spot.area?.toLowerCase() === normalizedSearch
+    );
+
+    if (results.length > 0) {
+      setFilteredParking(results);
+      const bounds = new maplibregl.LngLatBounds();
+
+      results.forEach((spot) => {
+        const marker = new maplibregl.Marker({ color: "#ff214d" })
+          .setLngLat([spot.longitude, spot.latitude])
+          .setPopup(new maplibregl.Popup().setText(spot.name))
+          .addTo(map.current);
+        markers.current.push(marker);
+        bounds.extend([spot.longitude, spot.latitude]);
+      });
+
+      map.current.fitBounds(bounds, { padding: 100 });
+      setShowViewDetails(true);
+      return;
+    }
+
+    // Fallback if no data
+    setFilteredParking([]);
+    setShowViewDetails(false);
+  };
+
+  const vehicleIcon = {
+    CAR: <FaCar style={{ marginRight: "8px" }} />,
+    BIKE: <FaMotorcycle style={{ marginRight: "8px" }} />,
+    OTHER: <FaQuestionCircle style={{ marginRight: "8px" }} />,
   };
 
   return (
-    <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
-      {/* Left Panel */}
+    <div style={{ display: "flex", height: "100vh", fontFamily: "Arial, sans-serif" }}>
+      {/* Sidebar */}
       <div
         style={{
           width: "350px",
           padding: "20px",
           background: "#fff",
           flexShrink: 0,
-          boxShadow: "2px 0 5px rgba(0,0,0,0.1)",
+          boxShadow: "2px 0 8px rgba(0,0,0,0.1)",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
-        <h2>Find a Space</h2>
+        <h2 style={{ marginBottom: "20px" }}>Find a Space</h2>
 
-        {/* Search Bar */}
-        <form onSubmit={handleSearch}>
-          <input
-            type="text"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Enter Bengaluru location"
-            style={{ width: "100%", padding: "10px", marginBottom: "15px" }}
-          />
-          <button
-            type="submit"
+        <input
+          type="text"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Search places in Bengaluru"
+          style={{
+            width: "100%",
+            padding: "10px",
+            border: "1px solid #ddd",
+            outline: "none",
+            marginBottom: "10px",
+            fontSize: "14px",
+          }}
+        />
+
+        {suggestions.length > 0 && (
+          <ul
             style={{
-              width: "100%",
-              padding: "10px",
-              background: "#000",
-              color: "#fff",
-              border: "none",
-              cursor: "pointer",
-              marginBottom: "15px",
+              listStyle: "none",
+              padding: 0,
+              margin: "0 0 10px 0",
+              maxHeight: "200px",
+              overflowY: "auto",
+              border: "1px solid #ddd",
+              background: "#fff",
+              zIndex: 1000,
             }}
           >
-            Search
-          </button>
-        </form>
+            {suggestions.map((place) => (
+              <li
+                key={place.id}
+                onClick={() => handleSelect(place)}
+                style={{
+                  padding: "10px",
+                  cursor: "pointer",
+                  borderBottom: "1px solid #eee",
+                }}
+              >
+                {place.text || place.place_name}
+              </li>
+            ))}
+          </ul>
+        )}
 
-        {/* Vehicle Selector */}
-        <form onSubmit={handleSubmit}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            marginBottom: "10px",
+            border: "1px solid #ddd",
+            padding: "5px 10px",
+          }}
+        >
+          {vehicleIcon[vehicleType]}
           <select
             value={vehicleType}
             onChange={(e) => setVehicleType(e.target.value)}
-            style={{ width: "100%", padding: "10px", marginBottom: "15px" }}
+            style={{ flex: 1, padding: "10px", border: "none", outline: "none" }}
           >
             <option value="CAR">CAR</option>
             <option value="BIKE">BIKE</option>
             <option value="OTHER">OTHER</option>
           </select>
-          <button
-            type="submit"
-            style={{
-              width: "100%",
-              padding: "10px",
-              background: "#000",
-              color: "#fff",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
-            Submit
-          </button>
-        </form>
+        </div>
 
-        {/* Logout */}
         <button
-          onClick={() => {
-            localStorage.removeItem("token");
-            navigate("/login");
-          }}
+          onClick={handleSearch}
           style={{
-            marginTop: "20px",
             width: "100%",
-            padding: "10px",
-            background: "#f5f5f5",
-            border: "1px solid #ddd",
+            padding: "12px",
+            background: "#000",
+            color: "#fff",
+            border: "none",
             cursor: "pointer",
+            fontWeight: "bold",
+            marginBottom: "10px",
           }}
         >
-          Logout
+          Search
         </button>
+
+        {showViewDetails && filteredParking.length > 0 && (
+          <button
+            onClick={() => navigate("/parkingmap", { state: { filteredParking, searchArea: searchInput } })}
+            style={{
+              width: "100%",
+              padding: "12px",
+              background: "#e6f2ff",
+              color: "#000",
+              border: "1px solid #ddd",
+              cursor: "pointer",
+              fontWeight: "bold",
+              marginBottom: "10px",
+            }}
+          >
+            View Details
+          </button>
+        )}
+        <div style={{ marginTop: "auto" }}>
+          <button
+            onClick={() => navigate("/profile")}
+            style={{
+              width: "100%",
+              padding: "12px",
+              background: "#e6f2ff",
+              border: "1px solid #ddd",
+              cursor: "pointer",
+              marginBottom: "10px",
+              display: "flex",
+              alignItems: "center",
+              fontWeight: "500",
+            }}
+          >
+            <FaUser style={{ marginRight: "10px" }} />
+            Profile
+          </button>
+
+          <button
+            onClick={() => {
+              localStorage.removeItem("token");
+              navigate("/login");
+            }}
+            style={{
+              width: "100%",
+              padding: "12px",
+              background: "#f5f5f5",
+              border: "1px solid #ddd",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              fontWeight: "500",
+            }}
+          >
+            <FaSignOutAlt style={{ marginRight: "10px" }} />
+            Logout
+          </button>
+        </div>
       </div>
 
-      {/* Map Panel */}
-      <div style={{ flexGrow: 1 }}>
-        <div ref={mapContainer} style={{ width: "100%", height: "100%" }} />
+      {/* Map */}
+      <div style={{ flexGrow: 1, padding: "10px" }}>
+        <div
+          ref={mapContainer}
+          style={{ width: "100%", height: "100%", borderRadius: "12px", overflow: "hidden" }}
+        />
       </div>
+
     </div>
   );
 }

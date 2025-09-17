@@ -2,11 +2,13 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import styles from "../public/Login.module.css";
+import Toast from "../components/Toast"; // Make sure Toast.jsx and Toast.module.css exist
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [toast, setToast] = useState({ message: "", type: "success" });
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
@@ -25,22 +27,42 @@ function Login() {
       });
 
       if (res.status === 200) {
-        // ✅ Save token for future requests
         localStorage.setItem("token", res.data.token);
-        alert("Login successful!");
-        navigate("/parkrpage"); // Redirect to home
+
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+            username: res.data.username, 
+            email: res.data.email,
+            phone: res.data.phone || "",
+            language: res.data.language || "English",
+          })
+          );
+        // Show success toast
+        setToast({ message: "Login successful! Redirecting...", type: "success" });
+
+        setTimeout(() => {
+          navigate("/parkrpage");
+        }, 1500);
       } else {
-        setError("Invalid credentials");
+        setToast({ message: "Invalid credentials", type: "error" });
       }
     } catch (err) {
       console.log("Error in login:", err);
-      setError("Login failed. Please check your credentials.");
+      setToast({ message: "Login failed. Please check your credentials.", type: "error" });
     }
   }
 
   return (
     <div className={styles.loginBox}>
-      <p className="h1">Login</p>
+      {/* Toast */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: "", type: "success" })}
+      />
+
+      <h1>Login</h1>
 
       <form onSubmit={handleSubmit} className={styles.form}>
         {/* Email */}
@@ -71,7 +93,7 @@ function Login() {
           />
         </div>
 
-        {/* ✅ Show error */}
+        {/* Error */}
         {error && <p style={{ color: "red" }}>{error}</p>}
 
         {/* Submit */}
@@ -79,6 +101,7 @@ function Login() {
           Login
         </button>
 
+        {/* Signup link */}
         <p className={styles.p}>
           Don’t have an account?{" "}
           <span
@@ -92,44 +115,49 @@ function Login() {
 
         <p className={`${styles.p} ${styles.line}`}>Or With</p>
 
-        {/* Google Button */}
-        <div className={styles["flex-row"]}>
-          <a href="http://localhost:8000/auth/google"></a>
-          <button type="button" className={`${styles.btn} ${styles.google}`}>
-            <svg
-              version="1.1"
-              width="20"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 512 512"
-            >
-              <path
-                fill="#FBBB00"
-                d="M113.47,309.408L95.648,375.94l-65.139,1.378C11.042,341.211,0,299.9,0,256
-                  c0-42.451,10.324-82.483,28.624-117.732h0.014l57.992,10.632l25.404,57.644c-5.317,15.501-8.215,32.141-8.215,49.456
-                  C103.821,274.792,107.225,292.797,113.47,309.408z"
-              />
-              <path
-                fill="#518EF8"
-                d="M507.527,208.176C510.467,223.662,512,239.655,512,256c0,18.328-1.927,36.206-5.598,53.451
-                  c-12.462,58.683-45.025,109.925-90.134,146.187l-0.014-0.014l-73.044-3.727l-10.338-64.535
-                  c29.932-17.554,53.324-45.025,65.646-77.911h-136.89V208.176h138.887L507.527,208.176L507.527,208.176z"
-              />
-              <path
-                fill="#28B446"
-                d="M416.253,455.624l0.014,0.014C372.396,490.901,316.666,512,256,512
-                  c-97.491,0-182.252-54.491-225.491-134.681l82.961-67.91c21.619,57.698,77.278,98.771,142.53,98.771
-                  c28.047,0,54.323-7.582,76.87-20.818L416.253,455.624z"
-              />
-              <path
-                fill="#F14336"
-                d="M419.404,58.936l-82.933,67.896c-23.335-14.586-50.919-23.012-80.471-23.012
-                  c-66.729,0-123.429,42.957-143.965,102.724l-83.397-68.276h-0.014C71.23,56.123,157.06,0,256,0
-                  C318.115,0,375.068,22.126,419.404,58.936z"
-              />
-            </svg>
-            Google
-          </button>
-        </div>
+        {/* Google button with SVG logo */}
+                <div className={styles["flex-row"]}>
+                  <button type="button" className={`${styles.btn} ${styles.google}`}>
+                    <svg
+                      version="1.1"
+                      width="20"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 512 512"
+                    >
+                      <path
+                        fill="#FBBB00"
+                        d="M113.47,309.408L95.648,375.94l-65.139,1.378
+                          C11.042,341.211,0,299.9,0,256
+                          c0-42.45,10.32-82.48,28.62-117.73l57.99,10.63l25.4,57.64
+                          c-5.32,15.5-8.21,32.14-8.21,49.45
+                          C103.82,274.79,107.23,292.8,113.47,309.41z"
+                      ></path>
+                      <path
+                        fill="#518EF8"
+                        d="M507.53,208.18C510.47,223.66,512,239.65,512,256
+                          c0,18.33-1.93,36.21-5.6,53.45
+                          c-12.46,58.68-45.02,109.93-90.13,146.19l-73.04-3.73l-10.34-64.54
+                          c29.93-17.55,53.32-45.03,65.65-77.91h-136.89V208.18h138.89z"
+                      ></path>
+                      <path
+                        fill="#28B446"
+                        d="M416.25,455.62C372.4,490.9,316.67,512,256,512
+                          c-97.49,0-182.25-54.49-225.49-134.68l82.96-67.91
+                          c21.62,57.7,77.28,98.77,142.53,98.77
+                          c28.05,0,54.32-7.58,76.87-20.82L416.25,455.62z"
+                      ></path>
+                      <path
+                        fill="#F14336"
+                        d="M419.4,58.94l-82.93,67.9
+                          c-23.34-14.59-50.92-23.01-80.47-23.01
+                          c-66.73,0-123.43,42.96-143.97,102.72l-83.4-68.28
+                          C71.23,56.12,157.06,0,256,0
+                          C318.12,0,375.07,22.13,419.4,58.94z"
+                      ></path>
+                    </svg>
+                    Google
+                  </button>
+                </div>
       </form>
     </div>
   );

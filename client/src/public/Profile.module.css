@@ -1,0 +1,114 @@
+.container {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  background: #f9f9f9;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 340px;
+  background: #fff;
+  border-right: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 30px;
+}
+
+.sidebarBtn {
+  padding: 12px;
+  margin-bottom: 10px;
+  background: #e6f2ff;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.2s ease;
+  margin-top: 520px;
+}
+
+.sidebarBtn:hover {
+  background: #cce0ff;
+}
+
+.sidebarBtnLogout {
+  padding: 12px;
+  background: #f2f2f2;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.2s ease;
+}
+
+.sidebarBtnLogout:hover {
+  background: #ddd;
+}
+
+/* Profile Section */
+.profileSection {
+  flex: 1;
+  padding: 40px;
+  overflow-y: auto;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.profileHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.avatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: #eee;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.avatarIcon {
+  font-size: 40px;
+}
+
+.editBtn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  padding: 5px;
+  cursor: pointer;
+}
+
+.infoList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.infoRow {
+  display: flex;
+  flex-direction: column;
+  padding: 15px 0;
+  border-bottom: 1px solid #ddd; /* ✅ line separator */
+}
+
+.infoRow strong {
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
